@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a1120">
+<title>Controle de Votação — Sindicato dos Professores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fundo:#0a1120; --painel:#121b2f; --painel-2:#182340; --linha:#243250;
+    --texto:#eef2fb; --mudo:#8b9bbd;
+    --azul:#6ea8ff; --verde:#3ddc97; --vermelho:#ff6b81;
+    --fonte:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;font-family:var(--fonte);font-size:16px;line-height:1.35;
+    background:var(--fundo);color:var(--texto);-webkit-tap-highlight-color:transparent;
+    display:flex;flex-direction:column;min-height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;}
+  input{font-family:inherit;}
+  :focus-visible{outline:3px solid var(--azul);outline-offset:3px;}
+
+  /* Topo */
+  .topbar{
+    max-width:760px;width:100%;margin:0 auto;padding:26px 20px 6px;
+    display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;
+  }
+  .brand h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1;}
+  .brand span{display:block;margin-top:8px;font-size:14px;color:var(--mudo);}
+  .fiscal-box{display:flex;align-items:center;gap:10px;background:var(--painel);border:1px solid var(--linha);border-radius:999px;padding:6px 6px 6px 16px;}
+  .fiscal-box label{font-size:13px;color:var(--mudo);font-weight:500;}
+  .fiscal-box input{
+    border:none;background:var(--painel-2);color:var(--texto);
+    border-radius:999px;padding:9px 14px;font-size:14px;width:150px;outline:none;
+  }
+  .fiscal-box input::placeholder{color:#63739a;}
+  .fiscal-box input:focus-visible{outline:2px solid var(--azul);outline-offset:0;}
+
+  /* Contadores soltos, sem caixas */
+  .stats{
+    max-width:760px;width:100%;margin:0 auto;padding:26px 20px 24px;
+    display:flex;justify-content:space-between;gap:10px;
+  }
+  .stat{flex:1;min-width:0;}
+  .stat b{
+    display:block;font-size:46px;font-weight:800;line-height:.95;letter-spacing:-2px;
+    font-variant-numeric:tabular-nums;color:var(--texto);
+  }
+  .stat small{display:block;margin-top:8px;font-size:13px;font-weight:500;color:var(--mudo);}
+  .stat.ok b{color:var(--azul);}
+  .stat.favor b{color:var(--verde);}
+  .stat.contra b{color:var(--vermelho);}
+
+  main{max-width:760px;margin:0 auto;padding:0 20px 44px;width:100%;flex:1;}
+
+  /* Busca */
+  .searchbar{
+    display:flex;gap:10px;margin-bottom:18px;position:sticky;top:0;z-index:15;
+    background:var(--fundo);padding:10px 0;
+  }
+  .searchbar input{
+    flex:1;min-width:0;padding:19px 22px 19px 54px;font-size:19px;font-weight:500;
+    border:2px solid var(--linha);border-radius:20px;outline:none;color:var(--texto);
+    background:var(--painel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%238b9bbd' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 20px center;
+    transition:border-color .15s;
+  }
+  .searchbar input::placeholder{color:#63739a;font-weight:400;}
+  .searchbar input:focus{border-color:var(--azul);}
+  .btn-limpar{
+    padding:0 22px;border-radius:20px;background:transparent;border:2px solid var(--linha);
+    font-size:15px;color:var(--mudo);font-weight:600;transition:border-color .15s,color .15s;
+  }
+  .btn-limpar:hover{border-color:var(--mudo);color:var(--texto);}
+
+  /* Lista em coluna única */
+  .lista{display:flex;flex-direction:column;gap:8px;}
+  .card{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;
+    background:var(--painel);border:1px solid transparent;border-radius:18px;
+    padding:17px 18px;text-align:left;color:inherit;font:inherit;cursor:pointer;
+    transition:background .15s,transform .07s;
+  }
+  .card > span:first-child{position:relative;padding-left:30px;min-width:0;}
+  .card > span:first-child::before{
+    content:"";position:absolute;left:0;top:3px;width:16px;height:16px;border-radius:50%;
+    border:2px solid #4a5b82;
+  }
+  .card:hover{background:var(--painel-2);}
+  .card:active{transform:scale(.99);}
+  .card.favor{background:rgba(61,220,151,.10);border-color:rgba(61,220,151,.35);}
+  .card.favor > span:first-child::before{background:var(--verde);border-color:var(--verde);}
+  .card.contra{background:rgba(255,107,129,.10);border-color:rgba(255,107,129,.35);}
+  .card.contra > span:first-child::before{background:var(--vermelho);border-color:var(--vermelho);}
+  .card-nome{font-size:18px;font-weight:600;line-height:1.2;display:block;letter-spacing:-.2px;}
+  .card-mat{font-size:13px;color:var(--mudo);margin-top:5px;display:block;}
+  .badge{font-size:13px;font-weight:600;white-space:nowrap;color:var(--mudo);}
+  .badge.favor{color:var(--verde);}
+  .badge.contra{color:var(--vermelho);}
+
+  .vazio{text-align:center;padding:60px 20px;color:var(--mudo);font-size:17px;}
+  .aviso{background:rgba(255,196,77,.10);border:1px solid rgba(255,196,77,.4);color:#ffd27a;padding:12px 16px;border-radius:14px;font-size:14px;margin-bottom:14px;}
+  .aviso.erro{background:rgba(255,107,129,.10);border-color:rgba(255,107,129,.4);color:#ff9aa9;}
+
+  /* Modal como painel inferior */
+  .overlay{position:fixed;inset:0;background:rgba(3,7,16,.72);display:flex;align-items:flex-end;justify-content:center;z-index:50;backdrop-filter:blur(4px);}
+  .modal{
+    background:var(--painel);border:1px solid var(--linha);border-bottom:none;
+    border-radius:30px 30px 0 0;padding:14px 22px 24px;width:100%;max-width:560px;
+    animation:sobe .2s ease-out;
+  }
+  .modal::before{content:"";display:block;width:44px;height:5px;border-radius:9px;background:var(--linha);margin:0 auto 18px;}
+  @keyframes sobe{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  .modal-tag{display:inline-block;font-size:13px;font-weight:600;color:var(--azul);background:rgba(110,168,255,.12);padding:6px 13px;border-radius:999px;}
+  .modal h2{margin:14px 0 4px;font-size:28px;font-weight:800;line-height:1.1;letter-spacing:-.8px;}
+  .modal-meta{margin:0;font-size:14px;color:var(--mudo);}
+  .modal-pergunta{font-size:15px;color:var(--mudo);margin:22px 0 12px;}
+  .modal-pergunta strong{color:var(--texto);}
+  .modal-actions{display:flex;flex-direction:row;gap:10px;}
+  .btn-voto{
+    flex:1;min-height:128px;padding:16px;border-radius:22px;font-size:18px;font-weight:800;
+    line-height:1.15;color:#04150d;transition:filter .15s,transform .07s;
+  }
+  .btn-voto:hover{filter:brightness(1.08);}
+  .btn-voto:active{transform:scale(.97);}
+  .btn-favor{background:var(--verde);}
+  .btn-contra{background:var(--vermelho);color:#26030a;}
+
+  .status-grande{font-size:22px;font-weight:800;padding:26px 18px;border-radius:22px;text-align:center;letter-spacing:-.4px;}
+  .status-grande.favor{background:rgba(61,220,151,.14);color:var(--verde);border:2px solid var(--verde);}
+  .status-grande.contra{background:rgba(255,107,129,.14);color:var(--vermelho);border:2px solid var(--vermelho);}
+
+  .btn-desfazer{width:100%;margin-top:14px;padding:14px;border-radius:16px;background:transparent;border:2px solid var(--linha);color:var(--mudo);font-size:15px;font-weight:600;transition:border-color .15s,color .15s;}
+  .btn-desfazer:hover{border-color:var(--vermelho);color:var(--vermelho);}
+  .btn-fechar{width:100%;margin-top:12px;padding:15px;border-radius:16px;background:var(--painel-2);color:var(--texto);font-size:15px;font-weight:600;transition:background .15s;}
+  .btn-fechar:hover{background:#20305a;}
+
+  .footer{text-align:center;padding:22px 16px 28px;font-size:14px;color:var(--mudo);border-top:1px solid var(--linha);}
+  .footer a{color:var(--azul);font-weight:600;text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s;}
+  .footer a:hover{border-bottom-color:var(--azul);}
+
+  .hidden{display:none !important;}
+
+  @media(min-width:680px){
+    .overlay{align-items:center;padding:16px;}
+    .modal{border-radius:30px;border-bottom:1px solid var(--linha);}
+    .modal::before{display:none;}
+  }
+  @media(max-width:560px){
+    .brand h1{font-size:25px;}
+    .stat b{font-size:34px;letter-spacing:-1.5px;}
+    .stat small{font-size:12px;}
+    .fiscal-box{width:100%;}
+    .fiscal-box input{flex:1;width:auto;}
+    .card-nome{font-size:17px;}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>Controle de Votação</h1>
+    <span>Sindicato dos Professores — Regional</span>
+  </div>
+  <div class="fiscal-box">
+    <label for="fiscalNome">Fiscal</label>
+    <input id="fiscalNome" type="text" placeholder="Seu nome" autocomplete="off">
+  </div>
+</header>
+
+<section class="stats">
+  <div class="stat"><b id="statTotal">0</b><small>Total</small></div>
+  <div class="stat ok"><b id="statVotaram">0</b><small>Votaram</small></div>
+  <div class="stat favor"><b id="statFavor">0</b><small>A favor</small></div>
+  <div class="stat contra"><b id="statContra">0</b><small>Contra</small></div>
+  <div class="stat"><b id="statRestante">0</b><small>Restantes</small></div>
+</section>
+
+<main>
+  <div id="avisoOffline" class="aviso hidden"></div>
+
+  <div class="searchbar">
+    <input id="busca" type="text" placeholder="Digite o nome do votante..." autocomplete="off" autofocus>
+    <button class="btn-limpar" id="btnLimpar">Limpar</button>
+  </div>
+
+  <div id="lista" class="lista"></div>
+  <div id="vazio" class="vazio hidden">Nenhum votante encontrado.</div>
+</main>
+
+<footer class="footer">
+  Desenvolvido por <a href="https://leonsedov.netlify.app/" target="_blank" rel="noopener noreferrer">Leon Sedov</a>
+</footer>
+
+<div id="modal" class="overlay hidden">
+  <div class="modal">
+    <span class="modal-tag" id="modalTag">Votante</span>
+    <h2 id="modalNome">—</h2>
+    <p class="modal-meta" id="modalMeta"></p>
+
+    <div id="blocoVoto">
+      <p class="modal-pergunta">Como este votante votou em relação à <strong>Chapa 2</strong>?</p>
+      <div class="modal-actions">
+        <button class="btn-voto btn-favor" data-voto="favor">A FAVOR da Chapa 2</button>
+        <button class="btn-voto btn-contra" data-voto="contra">CONTRA a Chapa 2</button>
+      </div>
+    </div>
+
+    <div id="blocoRegistrado" class="hidden">
+      <p class="modal-pergunta">Voto já registrado:</p>
+      <div id="statusRegistrado" class="status-grande"></div>
+      <p class="modal-meta" id="horaRegistro" style="margin-top:10px;"></p>
+      <button class="btn-desfazer" id="btnDesfazer">Desfazer registro</button>
+    </div>
+
+    <button class="btn-fechar" id="btnFechar">Fechar</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO
+   ============================================================ */
+const CONFIG = {
+  urlListarVotantes : 'https://n8n-n8n.njqmsx.easypanel.host/webhook/listar-votantes',
+  urlRegistrarVoto  : 'https://n8n-n8n.njqmsx.easypanel.host/webhook/registrar-voto',
+  usarListaLocalSeFalhar: true,
+  intervaloRetentativaMs: 20000
+};
+
+const LISTA_LOCAL = [
+  { Nome:'Ana Maria Souza', Cidade:'CEARÁ-MIRIM', Fonte:'MUNICÍPIO', Matricula:'1001' },
+  { Nome:'Beatriz Almeida Lima', Cidade:'CEARÁ-MIRIM', Fonte:'ESTADO', Matricula:'1003' }
+];
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+const CHAVES = { registros:'votacao_registros_v1', fila:'votacao_fila_v1', fiscal:'votacao_fiscal_v1' };
+
+let votantes = [];
+let selecionado = null;
+let registros = {};
+
+const $ = (id) => document.getElementById(id);
+const elBusca   = $('busca');
+const elLista   = $('lista');
+const elVazio   = $('vazio');
+const elModal   = $('modal');
+const elFiscal  = $('fiscalNome');
+const elAviso   = $('avisoOffline');
+
+const normalizar = (t) => (t || '').toString()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+const fmtHora = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+};
+
+/* Pega o primeiro campo não vazio, testando várias grafias */
+function pick(obj, ...chaves){
+  for (const k of chaves){
+    if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k];
+  }
+  return '';
+}
+
+/* ============================================================
+   CARREGAMENTO
+   ============================================================ */
+async function carregarVotantes(){
+  elAviso.classList.add('hidden');
+  try{
+    console.log('[votação] buscando:', CONFIG.urlListarVotantes);
+    const resp = await fetch(CONFIG.urlListarVotantes, { method:'GET' });
+    console.log('[votação] status HTTP:', resp.status);
+
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    const dados = await resp.json();
+    console.log('[votação] resposta bruta:', dados);
+
+    /* n8n pode devolver um array direto ou embrulhado em {data:[...]} */
+    let lista = dados;
+    if (!Array.isArray(lista) && dados && Array.isArray(dados.data))  lista = dados.data;
+    if (!Array.isArray(lista) && dados && Array.isArray(dados.items)) lista = dados.items;
+    if (!Array.isArray(lista) && dados && Array.isArray(dados.body))  lista = dados.body;
+
+    if(!Array.isArray(lista)) throw new Error('Formato inesperado (não é array)');
+
+    votantes = lista.map((v, i) => {
+      const matricula = String(pick(v, 'Matrícula', 'Matricula', 'matricula', 'MATRICULA', 'id') || i);
+      const nome      = pick(v, 'Nome', 'nome', 'NOME') || 'Sem nome';
+      const cidade    = pick(v, 'Cidade', 'cidade', 'CIDADE') || '';
+      const fonte     = pick(v, 'Fonte', 'fonte', 'FONTE') || '';
+      const chapa     = String(pick(v, 'chapa', 'Chapa', 'voto', 'Voto') || '').toLowerCase().trim();
+      const status    = String(pick(v, 'status', 'Status') || '').toLowerCase().trim();
+
+      let voto = null;
+      if ((chapa === 'favor' || chapa === 'contra') && status !== 'desfeito') {
+        voto = chapa;
+      }
+
+      return { id: matricula, nome, matricula, cidade, fonte, voto, hora: null };
+    });
+
+    console.log('[votação] votantes mapeados:', votantes.length, votantes[0]);
+
+    if (votantes.length === 0){
+      throw new Error('Webhook retornou array vazio');
+    }
+
+  }catch(err){
+    console.warn('[votação] fallback local:', err);
+
+    votantes = LISTA_LOCAL.map(v => ({
+      id: String(v.Matricula),
+      nome: v.Nome,
+      matricula: String(v.Matricula),
+      cidade: v.Cidade || '',
+      fonte: v.Fonte || '',
+      voto: null,
+      hora: null
+    }));
+
+    if(CONFIG.usarListaLocalSeFalhar){
+      elAviso.classList.remove('hidden');
+      elAviso.classList.add('erro');
+      elAviso.textContent = '⚠️ Erro ao buscar do n8n: ' + err.message + '. Usando lista local de teste.';
+    }
+  }
+
+  aplicarRegistros();
+  render();
+}
+
+function aplicarRegistros(){
+  votantes.forEach(v => {
+    const r = registros[v.id];
+    if(r && !v.voto){ v.voto = r.voto; v.hora = r.hora; }
+  });
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render(){
+  const termo = normalizar(elBusca.value);
+  const filtrados = votantes.filter(v =>
+    !termo ||
+    normalizar(v.nome).includes(termo) ||
+    normalizar(v.matricula).includes(termo)
+  );
+
+  elLista.innerHTML = '';
+
+  if(!filtrados.length){
+    elVazio.classList.remove('hidden');
+    elVazio.textContent = termo
+      ? 'Nenhum votante encontrado para "' + elBusca.value + '".'
+      : 'Nenhum votante cadastrado.';
+  }else{
+    elVazio.classList.add('hidden');
+  }
+
+  const frag = document.createDocumentFragment();
+
+  filtrados.forEach(v => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'card' + (v.voto ? ' ' + v.voto : '');
+    btn.dataset.id = v.id;
+
+    const rotulo = v.voto === 'favor' ? 'A favor'
+                 : v.voto === 'contra' ? 'Contra'
+                 : 'Pendente';
+
+    const sub = [v.matricula ? 'Mat. ' + v.matricula : '', v.cidade, v.fonte]
+      .filter(Boolean).join(' • ');
+
+    btn.innerHTML =
+      '<span>' +
+        '<span class="card-nome"></span>' +
+        (sub ? '<span class="card-mat">' + sub + '</span>' : '') +
+      '</span>' +
+      '<span class="badge ' + (v.voto || '') + '">' + rotulo + '</span>';
+
+    btn.querySelector('.card-nome').textContent = v.nome;
+    btn.addEventListener('click', () => abrirModal(v));
+    frag.appendChild(btn);
+  });
+
+  elLista.appendChild(frag);
+  atualizarStats();
+}
+
+function atualizarStats(){
+  const total   = votantes.length;
+  const votaram = votantes.filter(v => v.voto).length;
+  const favor   = votantes.filter(v => v.voto === 'favor').length;
+  const contra  = votantes.filter(v => v.voto === 'contra').length;
+
+  $('statTotal').textContent    = total;
+  $('statVotaram').textContent  = votaram;
+  $('statFavor').textContent    = favor;
+  $('statContra').textContent   = contra;
+  $('statRestante').textContent = total - votaram;
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function abrirModal(votante){
+  selecionado = votante;
+
+  $('modalNome').textContent = votante.nome;
+  const meta = [votante.matricula ? 'Matrícula: ' + votante.matricula : '',
+                votante.cidade, votante.fonte].filter(Boolean).join(' • ');
+  $('modalMeta').textContent = meta;
+
+  const jaVotou = !!votante.voto;
+
+  $('blocoVoto').classList.toggle('hidden', jaVotou);
+  $('blocoRegistrado').classList.toggle('hidden', !jaVotou);
+  $('modalTag').textContent = jaVotou ? 'Voto registrado' : 'Confirmar votante';
+
+  if(jaVotou){
+    const st = $('statusRegistrado');
+    st.textContent = votante.voto === 'favor' ? 'A FAVOR da Chapa 2' : 'CONTRA a Chapa 2';
+    st.className = 'status-grande ' + votante.voto;
+
+    const r = registros[votante.id] || {};
+    $('horaRegistro').textContent =
+      (votante.hora ? 'Registrado em ' + fmtHora(votante.hora) : '') +
+      (r.fiscal ? ' • Fiscal: ' + r.fiscal : '');
+  }
+
+  elModal.classList.remove('hidden');
+}
+
+function fecharModal(){
+  elModal.classList.add('hidden');
+  selecionado = null;
+}
+
+/* ============================================================
+   REGISTRAR / DESFAZER
+   ============================================================ */
+function registrarVoto(votante, voto){
+  const fiscal = elFiscal.value.trim() || 'não informado';
+  const hora   = new Date().toISOString();
+
+  registros[votante.id] = { voto, hora, fiscal };
+  localStorage.setItem(CHAVES.registros, JSON.stringify(registros));
+
+  votante.voto = voto;
+  votante.hora = hora;
+
+  render();
+  fecharModal();
+  elBusca.value = '';
+  render();
+  elBusca.focus();
+
+  enfileirar({
+    acao: 'registrar',
+    id: votante.id,
+    nome: votante.nome,
+    matricula: votante.matricula,
+    cidade: votante.cidade,
+    fonte: votante.fonte,
+    voto: voto,
+    hora: hora,
+    fiscal: fiscal
+  });
+
+  sincronizar();
+}
+
+function desfazerVoto(votante){
+  if(!confirm('Desfazer o registro de voto de "' + votante.nome + '"?')) return;
+
+  delete registros[votante.id];
+  localStorage.setItem(CHAVES.registros, JSON.stringify(registros));
+
+  votante.voto = null;
+  votante.hora = null;
+
+  render();
+  fecharModal();
+
+  enfileirar({
+    acao: 'desfazer',
+    id: votante.id,
+    nome: votante.nome,
+    matricula: votante.matricula,
+    hora: new Date().toISOString(),
+    fiscal: elFiscal.value.trim() || 'não informado'
+  });
+
+  sincronizar();
+}
+
+/* ============================================================
+   FILA + SYNC N8N
+   ============================================================ */
+function lerFila(){ try{ return JSON.parse(localStorage.getItem(CHAVES.fila) || '[]'); }catch(e){ return []; } }
+function salvarFila(f){ localStorage.setItem(CHAVES.fila, JSON.stringify(f)); }
+function enfileirar(payload){ const f = lerFila(); f.push(payload); salvarFila(f); }
+
+let sincronizando = false;
+async function sincronizar(){
+  if(sincronizando) return;
+  const fila = lerFila();
+  if(!fila.length) return;
+
+  sincronizando = true;
+  const restantes = [];
+
+  for(const item of fila){
+    try{
+      const resp = await fetch(CONFIG.urlRegistrarVoto, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(item)
+      });
+      if(!resp.ok) throw new Error('HTTP ' + resp.status);
+      console.log('[votação] enviado:', item.matricula, item.voto || '(desfeito)');
+    }catch(err){
+      console.warn('[votação] falha ao enviar, mantendo na fila:', err.message);
+      restantes.push(item);
+    }
+  }
+
+  salvarFila(restantes);
+  sincronizando = false;
+}
+
+/* ============================================================
+   EVENTOS
+   ============================================================ */
+elBusca.addEventListener('input', render);
+elBusca.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){ const p = elLista.querySelector('.card'); if(p) p.click(); }
+  if(e.key === 'Escape') fecharModal();
+});
+
+$('btnLimpar').addEventListener('click', () => { elBusca.value = ''; render(); elBusca.focus(); });
+
+document.querySelectorAll('.btn-voto').forEach(btn => {
+  btn.addEventListener('click', () => { if(selecionado) registrarVoto(selecionado, btn.dataset.voto); });
+});
+
+$('btnDesfazer').addEventListener('click', () => { if(selecionado) desfazerVoto(selecionado); });
+$('btnFechar').addEventListener('click', fecharModal);
+elModal.addEventListener('click', (e) => { if(e.target === elModal) fecharModal(); });
+elFiscal.addEventListener('input', () => localStorage.setItem(CHAVES.fiscal, elFiscal.value.trim()));
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') fecharModal(); });
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(function iniciar(){
+  try{ registros = JSON.parse(localStorage.getItem(CHAVES.registros) || '{}'); }catch(e){ registros = {}; }
+  elFiscal.value = localStorage.getItem(CHAVES.fiscal) || '';
+  carregarVotantes();
+  sincronizar();
+  setInterval(sincronizar, CONFIG.intervaloRetentativaMs);
+})();
+</script>
+</body>
+</html>
